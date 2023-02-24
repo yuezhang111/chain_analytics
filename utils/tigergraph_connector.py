@@ -63,8 +63,18 @@ class TigergraphClient(object):
         result = requests.post(url, headers=headers)
         return result.json()
 
+    @with_token
+    def insert(self,entities):
+        url = 'http://{}:{}/graph/{}'.format(self.host, self.rest_port, self.graph_name)
+        print(url)
+        headers = {
+            'Authorization': 'Bearer {}'.format(self.token)
+        }
+        result = requests.post(url, json=entities, headers=headers)
+        return result
+
 
 if __name__ == '__main__':
     c = TigergraphClient('nft_profit')
-    res = c.run_query('nft_profit_daily_log',address="0xbb34d62e24def6543470a9fd1d05f70375ce5ec5",dt_str="2022-05-29")
+    res = c.run_query('nft_profit_calculation',address="0xbb34d62e24def6543470a9fd1d05f70375ce5ec5")
     print(res)
