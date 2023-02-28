@@ -31,14 +31,15 @@ class TigergraphClient(object):
         self.user = user
         self.passwd = passwd
         self.graph_name = graph_name
-        self.token = ""
-        self.expiration: int = 0
+        self.token = os.getenv("TIGERGRAPH_TOKEN")
+        self.expiration: int = int(os.getenv("TIGERGRAPH_TOKEN_EXPIRATION"))
 
     def request_token(self):
         url = 'http://{}:{}/requesttoken'.format(self.host, self.rest_port)
         data = {'graph': self.graph_name}
         result = requests.post(url, json=data, auth=HTTPBasicAuth(self.user, self.passwd))
         result = result.json()
+        print(result['results']['token'],result['expiration'])
         self.token = result['results']['token']
         self.expiration = result['expiration']
 
