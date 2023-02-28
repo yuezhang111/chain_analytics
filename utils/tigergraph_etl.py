@@ -3,6 +3,8 @@ import requests
 from loguru import logger
 from collections import defaultdict
 from utils.doris_connector import DorisClient
+from utils.tigergraph_connector import tg_prod_host
+from utils.tigergraph_connector import tg_prod_port
 from utils.tigergraph_connector import TigergraphClient
 from utils.tigergraph_base import Vertex
 from utils.tigergraph_base import Edge
@@ -22,7 +24,7 @@ def check_and_parse(result: requests.Response):
 
 
 class DorisToTigergraphExtractTask(object):
-    def __init__(self, bucket_size=10000):
+    def __init__(self,bucket_size=10000):
         self.bucket_size = bucket_size
 
     def doris_extract_sql(self,start_block):
@@ -37,7 +39,7 @@ class DorisToTigergraphExtractTask(object):
 
 
 class DorisToTigergraphLoadTask(object):
-    def __init__(self, graph_name,res_data,vertex=None,edge=None):
+    def __init__(self, graph_name,res_data,is_test=True,vertex=None,edge=None):
         """
         :param graph_name:
         :param vertex: string - vertex_name
@@ -47,6 +49,7 @@ class DorisToTigergraphLoadTask(object):
         self.graph_name = graph_name
         self.vertex = vertex
         self.edge = edge
+        self.is_test = is_test
         self.res_rows = res_data[0]
         self.field_names = res_data[1]
 
@@ -84,7 +87,10 @@ class DorisToTigergraphLoadTask(object):
         return {"edges":Edge.to_tiger_graph_dict(edge_list)}
 
     def load_to_tigergraph(self):
-        tg = TigergraphClient(self.graph_name)
+        if self.is_test:
+            tg = TigergraphClient(self.graph_name)
+        else:
+            tg = TigergraphClient(self.graph_name,host=tg_prod_host,rest_port=tg_prod_port)
         if self.vertex is not None:
             vertex_entities = self.transform_vertex_data()
             vertex_load = json.dumps(vertex_entities,default=str)
