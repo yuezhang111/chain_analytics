@@ -18,6 +18,7 @@ class TokenTransferExtract(DorisToTigergraphExtractTask):
         ,amount
         ,transfer_time
         ,IFNULL(symbol,'') as symbol
+        ,IFNULL(price,0) as price
     FROM dw.dwb_token_transfer_detail_eth_hi
     WHERE block_number >= {start_block}
     AND block_number < {end_block}
@@ -49,7 +50,7 @@ def token_transfer_tigergraph_load(res_data):
             "vertex_name": "token_transfer",
             "vertex_attributes":
                 ["txn_hash","block_number","log_index","from_address","to_address",
-                 "token_address","amount","transfer_time","symbol"]
+                 "token_address","amount","transfer_time","symbol","price"]
         }
     )
     res = vertex_token_transfer_load.load_to_tigergraph()
@@ -84,15 +85,18 @@ def token_transfer_tigergraph_load(res_data):
     print("edge_receive_token_load", res)
 
 
-def main():
-    start_block = 16010000
-    bucket_size = 1000
-    end_block = 16015000
+def load_token_transfer(start_block,end_block=999999999,bucket_size=1000):
     while start_block < end_block:
-        res_data = token_transfer_extract(start_block=start_block,bucket_size=bucket_size)
+        res_data = token_transfer_extract(start_block=start_block, bucket_size=bucket_size)
         token_transfer_tigergraph_load(res_data)
         start_block += bucket_size
-        print((start_block-16000000)/bucket_size + 1)
+        print(start_block)
+
+
+def main():
+    start_block = 11400000
+    end_block = 11410000
+    load_token_transfer(start_block, end_block)
 
 
 if __name__ == "__main__":

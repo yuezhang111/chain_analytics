@@ -18,7 +18,8 @@ class BorrowEventExtract(DorisToTigergraphExtractTask):
             ,amount
             ,concat(block_number,'_',transfer_log_index) as transfer_id
         from price_oracle_test.ods_chain_debt_events_eth
-        where block_number >= {start_block}
+        where borrow_or_repay = 0
+        AND block_number >= {start_block}
         AND block_number < {end_block}
         """.format(
             start_block=start_block,
@@ -61,15 +62,18 @@ def borrow_event_tigergraph_load(res_data):
     print("edge_is_borrow_load", res)
 
 
-def main():
-    start_block = 11400000
-    bucket_size = 10000
-    end_block = 11500000
+def load_borrow_event(start_block,end_block=999999999,bucket_size=10000):
     while start_block < end_block:
         res_data = borrow_event_extract(start_block=start_block,bucket_size=bucket_size)
         borrow_event_tigergraph_load(res_data)
         start_block += bucket_size
-        print((start_block-16000000)/bucket_size + 1)
+        print(start_block)
+
+
+def main():
+    start_block = 11400000
+    end_block = 11500000
+    load_borrow_event(start_block, end_block)
 
 
 if __name__ == "__main__":
