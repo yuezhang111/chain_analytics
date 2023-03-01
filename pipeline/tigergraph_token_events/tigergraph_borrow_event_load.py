@@ -8,7 +8,7 @@ class BorrowEventExtract(DorisToTigergraphExtractTask):
 
     def doris_extract_sql(self,start_block):
         sql = """
-        select concat(block_number,'_',id) as borrow_event_id
+        select concat(block_number,'_',log_index) as borrow_event_id
             ,block_number
             ,log_index
             ,pool_address
@@ -16,6 +16,7 @@ class BorrowEventExtract(DorisToTigergraphExtractTask):
             ,borrower
             ,token_address
             ,amount
+            ,concat(block_number,'_',transfer_log_index) as transfer_id
         from price_oracle_test.ods_chain_debt_events_eth
         where block_number >= {start_block}
         AND block_number < {end_block}
@@ -32,10 +33,44 @@ def borrow_event_extract(start_block,bucket_size=1000):
     return res_data
 
 
-def token_transfer_tigergraph_load(res_data):
-    vertex_token_transfer_load = DorisToTigergraphLoadTask(
+def borrow_event_tigergraph_load(res_data):
+    vertex_borrow_event_load = DorisToTigergraphLoadTask(
         graph_name="token_events",
         res_data=res_data,
-        vertex="token_transfer"
+        vertex={
+            "vertex_name":"borrow_event",
+            "vertex_attributes":
+                ["block_number","log_index","pool_address","platform","borrower","token_address","amount"]
+        }
     )
+    res = vertex_borrow_event_load.load_to_tigergraph()
+    print("vertex_borrow_event_load",res)
 
+    edge_is_borrow_load = DorisToTigergraphLoadTask(
+        graph_name="token_events",
+        res_data=res_data,
+        edge={
+            "edge_name": "is_borrow",
+            "from_vertex_type": "borrow_event",
+            "from_vertex_field_name": "borrow_event_id",
+            "to_vertex_type": "token_transfer",
+            "to_vertex_field_name": "transfer_id"
+        }
+    )
+    res = edge_is_borrow_load.load_to_tigergraph()
+    print("edge_is_borrow_load", res)
+
+
+def main():
+    start_block = 11400000
+    bucket_size = 10000
+    end_block = 11500000
+    while start_block < end_block:
+        res_data = borrow_event_extract(start_block=start_block,bucket_size=bucket_size)
+        borrow_event_tigergraph_load(res_data)
+        start_block += bucket_size
+        print((start_block-16000000)/bucket_size + 1)
+
+
+if __name__ == "__main__":
+    main()
