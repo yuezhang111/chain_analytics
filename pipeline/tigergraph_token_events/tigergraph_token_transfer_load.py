@@ -45,7 +45,12 @@ def token_transfer_tigergraph_load(res_data):
     vertex_token_transfer_load = DorisToTigergraphLoadTask(
         graph_name="token_events",
         res_data=res_data,
-        vertex="token_transfer"
+        vertex={
+            "vertex_name": "token_transfer",
+            "vertex_attributes":
+                ["txn_hash","block_number","log_index","from_address","to_address",
+                 "token_address","amount","transfer_time","symbol"]
+        }
     )
     res = vertex_token_transfer_load.load_to_tigergraph()
     print("vertex_token_transfer_load",res)
@@ -80,9 +85,9 @@ def token_transfer_tigergraph_load(res_data):
 
 
 def main():
-    start_block = 16000000
+    start_block = 16010000
     bucket_size = 1000
-    end_block = 16010000
+    end_block = 16015000
     while start_block < end_block:
         res_data = token_transfer_extract(start_block=start_block,bucket_size=bucket_size)
         token_transfer_tigergraph_load(res_data)

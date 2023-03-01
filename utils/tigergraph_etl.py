@@ -42,7 +42,7 @@ class DorisToTigergraphLoadTask(object):
     def __init__(self, graph_name,res_data,is_test=True,vertex=None,edge=None):
         """
         :param graph_name:
-        :param vertex: string - vertex_name
+        :param vertex: dict - {vertex_name:,vertex_attributes:[]}
         :param edge: dict - {edge_name:,from_vertex_type:,from_vertex_field_name:,to_vertex_type:,to_vertex_field_name:}
         :param res_data:
         """
@@ -61,10 +61,11 @@ class DorisToTigergraphLoadTask(object):
         vertices_dict = defaultdict(dict)
         for row in self.res_rows:
             attribute_dict = dict()
-            for j in range(1, len(row)):
-                attribute_dict[self.field_names[j]] = row[j]
+            for j in range(len(self.vertex["vertex_attributes"])):
+                attribute_index = self.field_names.index(self.vertex["vertex_attributes"][j])
+                attribute_dict[self.field_names[attribute_index]] = row[attribute_index]
             Vertex(self.vertex,row[0],attribute_dict).parse_attributes_to(vertices_dict[row[0]])
-        return {'vertices':{self.vertex:vertices_dict}}
+        return {'vertices':{self.vertex["vertex_name"]:vertices_dict}}
 
     def transform_edge_data(self):
         """
