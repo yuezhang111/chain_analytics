@@ -35,6 +35,7 @@ class BackfillNFTBalanceCost(object):
         ) as aa
     ) as t
     WHERE rnk = 1
+    order by block_number asc
         """.format(bucket_size=bucket_size)
         res_rows, field_names = db.read_sql(bucket_sql)
         block_bucket = []
@@ -89,9 +90,8 @@ class BackfillNFTBalanceCost(object):
             left join prod.blocks as b
             ON a.block_number = b.block_number
             AND b.`chain` = 'eth'
-            INNER JOIN dw.dwm_nft_detail_ha as c
-            ON a.token_address = c.token_address
-            AND c.token_type = 'ERC721'
+            INNER JOIN prod.ods_chain_erc721_info as c
+            ON a.token_address = c.address
             WHERE a.`value` > 0
             AND a.`block_number` >= {start_blo}
             AND a.`block_number` < {end_blo}
