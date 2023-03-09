@@ -78,7 +78,7 @@ def token_transfer_tigergraph_load(res_data):
             "from_vertex_type": "token_transfer",
             "from_vertex_field_name": "transfer_id",
             "to_vertex_type": "account",
-            "to_vertex_field_name": "from_address"
+            "to_vertex_field_name": "to_address"
         }
     )
     res = edge_receive_token_load.load_to_tigergraph()
